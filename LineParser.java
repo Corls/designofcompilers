@@ -32,7 +32,8 @@ public class LineParser {
 			//Can't seem to logic the TK_EXPOP shortcut properly...
 			//I mean, I know why, but I haven't gotten around to it yet...
 			//{"TK_EXPOP", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", ""},
-			{"E_CLOSE", "", "SC_DEXP"},
+			{"E_CLOSE", "E_EQTO|E_NOTEQ|E_CLOSE", "SC_DEXP"},
+			{"E_CLOSE", ".*", "SC_DEXP"},
 		    
 			{"Q_OPEN", "[a-z]+", "EXT_STR"},
 			{"Q_CLOSE", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", ""},
@@ -61,7 +62,6 @@ public class LineParser {
 			validType = 1;
 		}
 		for(String[] valToken : validTokens) {
-			//System.out.println(token + ", " + valToken[0] + ", " + lookahead);
 			if(token.matches(valToken[0])) {
 				lookError = true;
 				if(valToken[1].isEmpty()) {
@@ -130,6 +130,9 @@ public class LineParser {
 			}
 			if(validType == 2 && !tokens[loc].equals("B_OPEN")) {
 				MainDisplay.errorReport += "[Line: " + lineNumber + "] Expected { to start conditional block.\n";
+			}
+			else {
+				validType = 0;
 			}
 		}
 		else if(type.equals("COND")) {
