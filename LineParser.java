@@ -31,17 +31,17 @@ public class LineParser {
 			{"TK_EXPR", "Q_OPEN|[a-z]|\\d|TRUE|FALSE|E_OPEN", ""},
 			//Can't seem to logic the TK_EXPOP shortcut properly...
 			//I mean, I know why, but I haven't gotten around to it yet...
-			//{"TK_EXPOP", "E_EQTO|E_NOTEQ|E_CLOSE", ""},
+			//{"TK_EXPOP", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", ""},
 			{"E_CLOSE", "", "SC_DEXP"},
 		    
 			{"Q_OPEN", "[a-z]+", "EXT_STR"},
-			{"Q_CLOSE", "E_EQTO|E_NOTEQ|E_CLOSE", ""},
+			{"Q_CLOSE", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", ""},
 			{"Q_CLOSE", "", ""},
-			{"[a-z]", "E_EQTO|E_NOTEQ|E_CLOSE", "EXT_ID"},
+			{"[a-z]", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", "EXT_ID"},
 			{"[a-z]", "", "EXT_ID"},
-			{"\\d", "E_EQTO|E_NOTEQ|E_CLOSE", "EXT_INT"},
+			{"\\d", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", "EXT_INT"},
 			{"\\d", "", "EXT_INT"},
-			{"TRUE|FALSE", "E_EQTO|E_NOTEQ|E_CLOSE", "EXT_BOOL"},
+			{"TRUE|FALSE", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", "EXT_BOOL"},
 			{"TRUE|FALSE", "", "EXT_BOOL"},
 			{"E_EQTO|E_NOTEQ", "TK_EXPR", "EXT_BOOL"}
 		};
@@ -105,6 +105,9 @@ public class LineParser {
 			lineNumber = tokens[loc-1].substring(3);
 		}
 		else if(type.equals("SBLOCK")) {
+			if(validType == 3) {
+				MainDisplay.errorReport += "[Line: " + lineNumber + "] Please make the conditional statement a boolean.\n";
+			}
 			bracketsIn++;
 		}
 		else if(type.equals("EBLOCK")) {
