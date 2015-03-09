@@ -105,9 +105,6 @@ public class LineParser {
 			lineNumber = tokens[loc-1].substring(3);
 		}
 		else if(type.equals("SBLOCK")) {
-			if(validType == 3) {
-				MainDisplay.errorReport += "[Line: " + lineNumber + "] Please make the conditional statement a boolean.\n";
-			}
 			bracketsIn++;
 		}
 		else if(type.equals("EBLOCK")) {
@@ -129,11 +126,13 @@ public class LineParser {
 				parensIn++;
 			}
 			if(validType == 2 && !tokens[loc].equals("B_OPEN")) {
-				MainDisplay.errorReport += "[Line: " + lineNumber + "] Expected { to start conditional block.\n";
+				MainDisplay.errorReport += "[Line: " + lineNumber + "] Expected { after conditional statement.\n";
+				errorFound();
 			}
-			else {
-				validType = 0;
+			else if(validType == 3) {
+				MainDisplay.errorReport += "[Line: " + lineNumber + "] Please make the conditional statement a boolean.\n";
 			}
+			validType = 0;
 		}
 		else if(type.equals("COND")) {
 			validType = 3;
