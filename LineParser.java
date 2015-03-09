@@ -29,11 +29,14 @@ public class LineParser {
 		    {"E_OPEN", "TK_EXPR", "SC_SEXP"},
 			{"E_PLUS", "TK_EXPR", "EXT_INT"},
 			{"TK_EXPR", "Q_OPEN|[a-z]|\\d|TRUE|FALSE|E_OPEN", ""},
+			//Can't seem to logic the TK_EXPOP shortcut properly...
+			//I mean, I know why, but I haven't gotten around to it yet...
 			//{"TK_EXPOP", "E_EQTO|E_NOTEQ|E_CLOSE", ""},
 			{"E_CLOSE", "", "SC_DEXP"},
 		    
-			{"Q_OPEN", "E_EQTO|E_NOTEQ|E_CLOSE", "EXT_STR"},
-			{"Q_OPEN", "", "EXT_STR"},
+			{"Q_OPEN", "[a-z]+", "EXT_STR"},
+			{"Q_CLOSE", "E_EQTO|E_NOTEQ|E_CLOSE", ""},
+			{"Q_CLOSE", "", ""},
 			{"[a-z]", "E_EQTO|E_NOTEQ|E_CLOSE", "EXT_ID"},
 			{"[a-z]", "", "EXT_ID"},
 			{"\\d", "E_EQTO|E_NOTEQ|E_CLOSE", "EXT_INT"},
@@ -58,22 +61,23 @@ public class LineParser {
 			validType = 1;
 		}
 		for(String[] valToken : validTokens) {
+			//System.out.println(token + ", " + valToken[0] + ", " + lookahead);
 			if(token.matches(valToken[0])) {
 				lookError = true;
 				if(valToken[1].isEmpty()) {
 					validType = 0;
 				}
-				if(valToken[1].isEmpty() || lookahead.matches(valToken[1])) {
+				if(valToken[1].isEmpty() || lookahead.matches(valToken[1]) || valToken[1].startsWith("TK_")) {
 					if(valToken[2].startsWith("SC_")) {
 						parseSC(valToken[2], ts);
 					}
 					else if(valToken[2].startsWith("EXT_")) {
 						parseEXPR(valToken[2], ts);
 					}
-					return;
-				}
-				else if(valToken[1].startsWith("TK_")) {
-					tokenMatch(valToken[1], lookahead);
+					if(valToken[1].startsWith("TK_")) {
+						tokenMatch(valToken[1], tokens[ts]);
+						return;
+					}
 					return;
 				}
 			}
@@ -84,9 +88,11 @@ public class LineParser {
 		}
 		System.out.println(lookError);
 		if(lookError) {
+			MainDisplay.errorReport += "\nBefore: " + token + "\n";
 			MainDisplay.errorReport += "\nFound: " + lookahead + "\n";
 		}
 		else {
+			MainDisplay.errorReport += "\nValid: " + validType + "\n";
 			MainDisplay.errorReport += "\nFound: " + token + "\n";
 		}
 		errorFound();
@@ -162,7 +168,7 @@ public class LineParser {
 			if(tokens[loc].startsWith("LN_"))
 				lineNumber = tokens[loc].substring(3);
 			else if(tokens[loc].matches("Q_CLOSE")) {
-				ts = loc + 1;
+				ts = loc;
 				return;
 			}
 		}
