@@ -63,7 +63,7 @@ public class MainDisplay {
 		
 		//Parse
 		System.out.println("\n");
-		//LineParser.parseCode(lexedCode);
+		LineParser.parseCode(lexedCode);
 		if(!warningReport.isEmpty())
 			System.out.println("Warning Report:\n" + warningReport);
 		if(!errorReport.isEmpty()) {
@@ -75,6 +75,7 @@ public class MainDisplay {
 	
 	private static String lexateLine(String lexThis) {
 		String[] lexThese = lexThis.split("\"");
+		boolean endQuote = lexThis.endsWith("\"");
 		lexThis = "";
 		
 		for(int i=0; i<lexThese.length; i++) {
@@ -84,8 +85,12 @@ public class MainDisplay {
 				wordCheck(lexThese[i]);
 				numCheck(lexThese[i]);
 			}
-			else
+			else {
 				lexThis += " Q_OPEN " + lexQuote(lexThese[i]) + " Q_CLOSE ";
+				if(lexThese.length-1 == i && !endQuote) {
+					errorReport += "[Line: " + lineNumber + "] Quotes can only be on a single line.\n";
+				}
+			}
 		}
 		
 		return lexThis.replaceAll("(\\s)+", " ");
