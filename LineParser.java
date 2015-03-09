@@ -125,12 +125,13 @@ public class LineParser {
 				MainDisplay.errorReport += "[Line: " + lineNumber + "] Found an unexpected )\n";
 				parensIn++;
 			}
+			if(validType == 3) {
+				MainDisplay.errorReport += "[Line: " + lineNumber + "] Please make the conditional statement a boolean.\n";
+				validType = 2;
+			}
 			if(validType == 2 && !tokens[loc].equals("B_OPEN")) {
 				MainDisplay.errorReport += "[Line: " + lineNumber + "] Expected { after conditional statement.\n";
 				errorFound();
-			}
-			else if(validType == 3) {
-				MainDisplay.errorReport += "[Line: " + lineNumber + "] Please make the conditional statement a boolean.\n";
 			}
 			validType = 0;
 		}
