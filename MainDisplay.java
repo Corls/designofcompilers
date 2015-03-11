@@ -117,7 +117,7 @@ public class MainDisplay {
 			statement = statement.replaceAll(reglex[0], reglex[1]);
 		}
 		statement = statement.replaceAll("(\\-?)(0*)(\\d)", " $1$3 ");
-		statement = statement.replaceAll("([a-z])", " $1 ");
+		statement = statement.replaceAll("([^a-z])([a-z])([a-z])([^a-z])", " $2 $3 ");
 		return statement;
 	}
 	private static String lexQuote(String quoteText) {
