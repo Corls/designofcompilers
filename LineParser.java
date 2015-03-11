@@ -4,7 +4,7 @@ public class LineParser {
 	
 	private static String[] tokens;
 	private static String lineNumber = "0";
-	private static int validType = 0; //0 = start, 1 = normal, 2 = condition until ") {", 3 = condition before ==/!=
+	private static int validType = 0; //0 = start, 1 = normal, 2 = condition until ") {", 3 = condition before ==/!=/true/false
 	private static int bracketsIn = 0;
 	private static int parensIn = 0;
 	private static int ts = 0;
