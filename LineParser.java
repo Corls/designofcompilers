@@ -42,7 +42,7 @@ public class LineParser {
 			{"[a-z]", "", "EXT_ID"},
 			{"\\d", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", "EXT_INT"},
 			{"\\d", "", "EXT_INT"},
-			{"TRUE|FALSE", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", "EXT_BOOL"},
+			{"TRUE|FALSE", "E_EQTO|E_NOTEQ|E_CLOSE", "EXT_BOOL"},
 			{"TRUE|FALSE", "", "EXT_BOOL"},
 			{"E_EQTO|E_NOTEQ", "TK_EXPR", "EXT_BOOL"}
 		};
@@ -86,13 +86,11 @@ public class LineParser {
 		if(validType == 0) {
 			MainDisplay.errorReport += "\nExpected a(n) " + startTokenErrorReference;
 		}
-		System.out.println(lookError);
 		if(lookError) {
 			MainDisplay.errorReport += "\nBefore: " + token + "\n";
 			MainDisplay.errorReport += "\nFound: " + lookahead + "\n";
 		}
 		else {
-			MainDisplay.errorReport += "\nValid: " + validType + "\n";
 			MainDisplay.errorReport += "\nFound: " + token + "\n";
 		}
 		errorFound();
