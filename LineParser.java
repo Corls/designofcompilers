@@ -35,7 +35,7 @@ public class LineParser {
 			{"E_CLOSE", "E_EQTO|E_NOTEQ|E_CLOSE", "SC_DEXP"},
 			{"E_CLOSE", ".*", "SC_DEXP"},
 		    
-			{"Q_OPEN", "[a-z]+", "EXT_STR"},
+			{"Q_OPEN", ".*", "EXT_STR"},
 			{"Q_CLOSE", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", ""},
 			{"Q_CLOSE", "", ""},
 			{"[a-z]", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", "EXT_ID"},
@@ -169,9 +169,7 @@ public class LineParser {
 	
 	private static void parseQuote(int loc) {
 		for(;loc<tokens.length; loc++) {
-			if(tokens[loc].startsWith("LN_"))
-				lineNumber = tokens[loc].substring(3);
-			else if(tokens[loc].matches("Q_CLOSE")) {
+			if(tokens[loc].matches("Q_CLOSE")) {
 				ts = loc;
 				return;
 			}
