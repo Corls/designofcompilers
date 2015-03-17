@@ -117,10 +117,12 @@ public class MainDisplay {
 			statement = statement.replaceAll(reglex[0], reglex[1]);
 		}
 		statement = statement.replaceAll("(\\-?)(0*)(\\d)", " $1$3 ");
-		statement = statement.replaceAll("([^a-z])([a-z])([a-z])([^a-z])", " $2 $3 ");
+		statement = statement.replaceAll("([a-z])", " $1 ");
 		return statement;
 	}
 	private static String lexQuote(String quoteText) {
+		/*if(quoteText.isEmpty())
+			return "Q_EMPTY";*/
 		if(quoteText.matches(".*[A-Z].*"))
 			warningReport += "[Line: " + lineNumber + "] Converted uppercase to lowercase in quote.\n";
 		if(quoteText.matches(".*[^a-zA-Z].*"))
