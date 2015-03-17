@@ -36,9 +36,9 @@ public class LineParser {
 			{"E_CLOSE", ".*", "SC_DEXP"},
 		    
 			{"Q_OPEN", ".*", "EXT_STR"},
-			{"Q_CLOSE", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", ""},
+			{"Q_CLOSE", "E_EQTO|E_NOTEQ|E_CLOSE", ""},
 			{"Q_CLOSE", "", ""},
-			{"[a-z]", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", "EXT_ID"},
+			{"[a-z]", "E_EQTO|E_NOTEQ|E_CLOSE", "EXT_ID"},
 			{"[a-z]", "", "EXT_ID"},
 			{"\\d", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", "EXT_INT"},
 			{"\\d", "", "EXT_INT"},
