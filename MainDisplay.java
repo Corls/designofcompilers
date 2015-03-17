@@ -88,7 +88,7 @@ public class MainDisplay {
 			else {
 				lexThis += " Q_OPEN " + lexQuote(lexThese[i]) + " Q_CLOSE ";
 				if(lexThese.length-1 == i && !endQuote) {
-					errorReport += "[Line: " + lineNumber + "] Quotes can only be on a single line.\n";
+					errorReport += "[Line: " + lineNumber + "] End quote not detected on line. Remember, quotes can only be on a single line.\n";
 				}
 			}
 		}
@@ -121,12 +121,14 @@ public class MainDisplay {
 		return statement;
 	}
 	private static String lexQuote(String quoteText) {
-		/*if(quoteText.isEmpty())
-			return "Q_EMPTY";*/
+		if(quoteText.isEmpty())
+			return "Q_EMPTY";
 		if(quoteText.matches(".*[A-Z].*"))
-			warningReport += "[Line: " + lineNumber + "] Converted uppercase to lowercase in quote.\n";
-		if(quoteText.matches(".*[^a-zA-Z].*"))
-			warningReport += "[Line: " + lineNumber + "] Invalid characters removed from quote.\n";
+			errorReport += "[Line: " + lineNumber + "] Uppercase letters detected in quote. Please use lowercase and spaces.\n";
+		if(quoteText.matches(".*\\d.*"))
+			errorReport += "[Line: " + lineNumber + "] Numbers detected in quote. Please use lowercase and spaces.\n";
+		if(quoteText.matches(".*[^a-zA-Z\\s].*"))
+			errorReport += "[Line: " + lineNumber + "] Invalid characters detected in quote. Please use lowercase and spaces.\n";
 		quoteText = quoteText.toLowerCase();
 		quoteText = quoteText.replaceAll("[^a-z\\s]", "");
 		quoteText = quoteText.replaceAll("\\s", " Q_SPACE ");
