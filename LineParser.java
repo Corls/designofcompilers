@@ -52,6 +52,12 @@ public class LineParser {
 		for(ts=1; ts<tokens.length; ts++) {
 			tokenMatch(tokens[ts-1], tokens[ts]);
 		}
+		if(ts == tokens.length){
+			if(!tokens[tokens.length-1].equals("EOF")) {
+				MainDisplay.warningReport += "You are missing an end of file ($).\n";
+			}
+			parseSC("SC_END", ts-1);
+		}
 	}
 	
 	public static void tokenMatch(String token, String lookahead) {
@@ -98,6 +104,7 @@ public class LineParser {
 	
 	private static void parseSC(String type, int loc) {
 		type = type.substring(3);
+		System.out.println(type);
 		//Because Mac Yosemite doesn't allow anything > 1.6 and you need 1.7 or > to switch-case Strings...
 		if(type.equals("LINE")) {
 			lineNumber = tokens[loc-1].substring(3);
@@ -146,6 +153,9 @@ public class LineParser {
 		else if(type.equals("END")) {
 			if(ts < tokens.length) {
 				MainDisplay.warningReport += "[Line: " + lineNumber + "] Extra code found after end of file ($).\n";
+			}
+			if(bracketsIn > 0) {
+				MainDisplay.errorReport += "[End of File] You are missing " + bracketsIn + " }.\n";
 			}
 			ts = tokens.length;
 		}
