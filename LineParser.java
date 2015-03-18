@@ -104,7 +104,6 @@ public class LineParser {
 	
 	private static void parseSC(String type, int loc) {
 		type = type.substring(3);
-		System.out.println(type);
 		//Because Mac Yosemite doesn't allow anything > 1.6 and you need 1.7 or > to switch-case Strings...
 		if(type.equals("LINE")) {
 			lineNumber = tokens[loc-1].substring(3);
