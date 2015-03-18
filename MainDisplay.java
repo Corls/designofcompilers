@@ -30,7 +30,7 @@ public class MainDisplay {
 			{"while", " C_LOOP "},
 			{"true", " TRUE "},
 			{"false", " FALSE "},
-			{"\\$$", " EOF "}
+			{"\\$", " EOF "}
 		};
 	
 	public static void main(String[] args) {
@@ -40,6 +40,10 @@ public class MainDisplay {
 		String scanTest = scan.nextLine();
 		while(!scanTest.endsWith("$"))
 			scanTest += "\n" + scan.nextLine();
+		if(!scanTest.startsWith("{")){
+			System.out.println("\nPlease make sure your code is wrapped by {}$");
+			return;
+		}
 		String[] practiceArray = scanTest.split("\n");
 		
 		//Lex
