@@ -1,0 +1,144 @@
+import java.util.ArrayList;
+import java.util.Arrays;
+
+
+public class SAnalyzer {
+	
+	private static String lineNumber = "1";
+	private static ArrayList<Object> ast = new ArrayList<Object>();
+	private static String[] parsed;
+	private static int ts;
+		/*
+			{"LN_\\d+", "", "SC_LINE"},
+			{"B_OPEN", "BLOCK", ""},
+			{"B_CLOSE", "", ""}
+			{"C_[A-Z]+", "2", "SC_COND"},
+			{"D_[A-Z]+", "2", "SC_DECL"},
+			{"PRINT", "E_OPEN", ""},
+			{"[a-z]", "SET", ""},
+			{"EOF", "", "SC_END"}
+		*/
+	
+	public static void createAST(String treeThis) {
+		parsed = treeThis.split("\\s");
+		for(ts = 2; ts < parsed.length; ts++) {
+			if(!isIgnored(parsed[ts]))
+				ast.add(createBranch(parsed[ts]));
+		}
+		System.out.println(Arrays.deepToString(ast.toArray()));
+	}
+	
+	private static Object[] createBranch(String token) {
+		Object[] branch = null;
+		if(token.matches("B_OPEN")) {
+			branch = branchBlock();
+		}
+		else if(token.matches("C_[A-Z]+")) {
+			token = token.substring(2);
+			ts += 2;
+			branch = new Object[]{token, branchEXPR(), branchBlock()};
+		}
+		else if(token.matches("D_[A-Z]+")) {
+			ts++;
+			branch = new Object[]{"DECLARE", token.substring(2), parsed[ts]};
+		}
+		else if(token.matches("PRINT")) {
+			ts += 2;
+			branch = new Object[]{token, branchEXPR()};
+		}
+		else if(token.matches("[a-z]")) {
+			ts += 2;
+			branch = new Object[]{"SET", token, branchEXPR()};
+		}
+		else {
+			MainDisplay.errorReport = "[Line: " + lineNumber + "] This message should never appear. (" + token + ")\n";
+		}
+		return branch;
+	}
+	private static boolean isIgnored(String token) {
+		if(token.matches("LN_\\d+")) {
+			lineNumber = token.substring(3);
+			return true;
+		}
+		else if(token.matches("B_CLOSE")) {
+			//This is for the initial block reference.
+			return true;
+		}
+		else if(token.matches("EOF")) {
+			ts = parsed.length;
+			return true;
+		}
+		
+		return false;
+	}
+	
+	//Branch Methods
+	private static Object[] branchBlock() {
+		ArrayList<Object> block = new ArrayList<Object>();
+		block.add("BLOCK");
+		
+		for(ts++; ts<parsed.length; ts++) {
+			if(parsed[ts].matches("B_CLOSE")) {
+				return block.toArray();
+			}
+			if(!isIgnored(parsed[ts]))
+				block.add(createBranch(parsed[ts]));
+		}
+		
+		MainDisplay.errorReport = "[Line: " + lineNumber + "] This message should never appear. (BLOCK)\n";
+		return block.toArray();
+	}
+	
+	private static Object branchEXPR() {
+		String root = "";
+		Object branchOne;
+		Object branchTwo;
+		
+		if(parsed[ts].matches("E_OPEN")) {
+			ts++;
+			branchOne = branchEXPR();
+		}
+		else if(parsed[ts].matches("Q_OPEN")) {
+			branchOne = branchQuote();
+		}
+		else {
+			branchOne = parsed[ts];
+		}
+		
+		if(!parsed[ts+1].matches("E_[A-Z]+")) {
+			return branchOne;
+		}
+		else {
+			ts++;
+		}
+		
+		if(parsed[ts].matches("E_CLOSE")) {
+			return branchOne;
+		}
+		else {
+			root = parsed[ts];
+		}
+		
+		ts++;
+		branchTwo = branchEXPR();
+		
+		if(root.isEmpty()) {
+			MainDisplay.errorReport = "[Line: " + lineNumber + "] This message should never appear. (EXPR)\n";
+		}
+		
+		return new Object[]{root, branchOne, branchTwo};
+	}
+	
+	private static Object[] branchQuote() {
+		ArrayList<String> quote = new ArrayList<String>();
+		quote.add("QUOTE");
+		for(ts++; ts < parsed.length && !parsed[ts].matches("Q_CLOSE"); ts++) {
+			if(parsed[ts].matches("Q_SPACE"))
+				quote.add("SPACE");
+			else
+				quote.add(parsed[ts]);
+		}
+		return quote.toArray();
+	}
+
+}
