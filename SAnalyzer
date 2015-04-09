@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 public class SAnalyzer {
 	
-	private static String lineNumber = "1";
+	private static String lineNumber = "0";
 	private static ArrayList<Object> ast = new ArrayList<Object>();
 	private static String[] parsed;
 	private static int ts;
@@ -21,7 +21,7 @@ public class SAnalyzer {
 	
 	public static void createAST(String treeThis) {
 		parsed = treeThis.split("\\s");
-		for(ts = 2; ts < parsed.length; ts++) {
+		for(ts = 0; ts < parsed.length; ts++) {
 			if(!isIgnored(parsed[ts]))
 				ast.add(createBranch(parsed[ts]));
 		}
@@ -35,15 +35,17 @@ public class SAnalyzer {
 		}
 		else if(token.matches("C_[A-Z]+")) {
 			token = token.substring(2);
-			ts += 2;
-			branch = new Object[]{token, branchEXPR(), branchBlock()};
+			ts++;
+			Object condExpr = branchEXPR();
+			ts++;
+			branch = new Object[]{token, condExpr, branchBlock()};
 		}
 		else if(token.matches("D_[A-Z]+")) {
 			ts++;
 			branch = new Object[]{"DECLARE", token.substring(2), parsed[ts]};
 		}
-		else if(token.matches("PRINT")) {
-			ts += 2;
+		else if(token.equals("PRINT")) {
+			ts++;
 			branch = new Object[]{token, branchEXPR()};
 		}
 		else if(token.matches("[a-z]")) {
@@ -60,11 +62,7 @@ public class SAnalyzer {
 			lineNumber = token.substring(3);
 			return true;
 		}
-		else if(token.matches("B_CLOSE")) {
-			//This is for the initial block reference.
-			return true;
-		}
-		else if(token.matches("EOF")) {
+		else if(token.equals("EOF")) {
 			ts = parsed.length;
 			return true;
 		}
@@ -78,7 +76,7 @@ public class SAnalyzer {
 		block.add("BLOCK");
 		
 		for(ts++; ts<parsed.length; ts++) {
-			if(parsed[ts].matches("B_CLOSE")) {
+			if(parsed[ts].equals("B_CLOSE")) {
 				return block.toArray();
 			}
 			if(!isIgnored(parsed[ts]))
@@ -94,11 +92,11 @@ public class SAnalyzer {
 		Object branchOne;
 		Object branchTwo;
 		
-		if(parsed[ts].matches("E_OPEN")) {
+		if(parsed[ts].equals("E_OPEN")) {
 			ts++;
 			branchOne = branchEXPR();
 		}
-		else if(parsed[ts].matches("Q_OPEN")) {
+		else if(parsed[ts].equals("Q_OPEN")) {
 			branchOne = branchQuote();
 		}
 		else {
@@ -112,11 +110,11 @@ public class SAnalyzer {
 			ts++;
 		}
 		
-		if(parsed[ts].matches("E_CLOSE")) {
+		if(parsed[ts].equals("E_CLOSE")) {
 			return branchOne;
 		}
 		else {
-			root = parsed[ts];
+			root = parsed[ts].substring(2);
 		}
 		
 		ts++;
@@ -139,6 +137,11 @@ public class SAnalyzer {
 				quote.add(parsed[ts]);
 		}
 		return quote.toArray();
+	}
+	
+	//
+	public static void analyzeCode() {
+		
 	}
 
 }
