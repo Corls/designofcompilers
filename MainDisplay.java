@@ -9,7 +9,7 @@ public class MainDisplay {
 	private static int lineNumber = 0;
 	public static String errorReport = "";
 	public static String warningReport = "";
-	public static ArrayList<String[]> symbolTable = new ArrayList<String[]>();
+	public static ArrayList<ArrayList<String[]>> symbolTable = new ArrayList<ArrayList<String[]>>();
 	public static ArrayList<Object[]> concatSyntaxTree = new ArrayList<Object[]>();
 	private static String grammar_regex = "";
 	private final static String[][] GRAMMAR_TABLE =
@@ -35,7 +35,7 @@ public class MainDisplay {
 	
 	public static void main(String[] args) {
 		//Get Input
-		String practiceStatement = "string x = \"Hello there\"\nif(potato != \"\")\n\tx= \"Hello failed...\"\nn string 9xderp =-089 string b = \"b\"$";
+		String practiceStatement = "{string x = \"hello there\"\nif(potato != \"\")\n\tx= \"hello failed\"\nn string 9xderp =-089 string b = \"b\"}$";
 		System.out.println("Sample:\n" + practiceStatement + "\n\nPlease Enter Code Below:");
 		String scanTest = scan.nextLine();
 		while(!scanTest.endsWith("$"))
@@ -57,7 +57,7 @@ public class MainDisplay {
 			System.out.println(practiceArray[i]);
 		}
 		if(!warningReport.isEmpty()) {
-			System.out.println("Warning Report:\n" + warningReport);
+			System.out.println("Lexer Warning Report:\n" + warningReport);
 			warningReport = "";
 		}
 		if(!errorReport.isEmpty()) {
@@ -68,12 +68,39 @@ public class MainDisplay {
 		//Parse
 		System.out.println("\n");
 		LineParser.parseCode(lexedCode);
-		if(!warningReport.isEmpty())
-			System.out.println("Warning Report:\n" + warningReport);
+		if(!warningReport.isEmpty()) {
+			System.out.println("Parser Warning Report:\n" + warningReport);
+			warningReport = "";
+		}
 		if(!errorReport.isEmpty()) {
 			System.out.println("Error Report:\n" + errorReport);
 			return;
 		}
+		
+		//Samantic Analysis
+		System.out.println("\n");
+		SAnalyzer.createAST(lexedCode);
+		if(!warningReport.isEmpty()) {
+			System.out.println("AST Warning Report:\n" + warningReport);
+			warningReport = "";
+		}
+		if(!errorReport.isEmpty()) {
+			System.out.println("Error Report:\n" + errorReport);
+			return;
+		}
+		
+		System.out.println("\n");
+		SAnalyzer.analyzeCode();
+		if(!warningReport.isEmpty()) {
+			System.out.println("AST Warning Report:\n" + warningReport);
+			warningReport = "";
+		}
+		if(!errorReport.isEmpty()) {
+			System.out.println("Error Report:\n" + errorReport);
+			return;
+		}
+		
+		//Compiling Finished Notice
 		System.out.println("All Good");
 	}
 	
@@ -111,8 +138,11 @@ public class MainDisplay {
 		}
 	}
 	private static void numCheck(String checkThis) {
-		if(checkThis.matches(".*\\-?\\d\\d+.*")) {
+		if(checkThis.matches(".*\\d\\d+.*")) {
 			errorReport += "[Line: " + lineNumber + "] The value \"" + checkThis.replaceFirst("(^.*?)(\\-?\\d\\d+)(.*?$)", "$2") + "\" is too large.\n";
+		}
+		if(checkThis.matches(".*\\-\\d+.*")) {
+			errorReport += "[Line: " + lineNumber + "] Negative numbers are invalid.\n";
 		}
 	}
 	
