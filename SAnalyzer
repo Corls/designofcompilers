@@ -5,19 +5,11 @@ import java.util.Arrays;
 public class SAnalyzer {
 	
 	private static String lineNumber = "0";
+	private static ArrayList<Integer> scopeHistory = new ArrayList<Integer>();
+	private static int nextScope = 0;
 	private static ArrayList<Object> ast = new ArrayList<Object>();
 	private static String[] parsed;
 	private static int ts;
-		/*
-			{"LN_\\d+", "", "SC_LINE"},
-			{"B_OPEN", "BLOCK", ""},
-			{"B_CLOSE", "", ""}
-			{"C_[A-Z]+", "2", "SC_COND"},
-			{"D_[A-Z]+", "2", "SC_DECL"},
-			{"PRINT", "E_OPEN", ""},
-			{"[a-z]", "SET", ""},
-			{"EOF", "", "SC_END"}
-		*/
 	
 	public static void createAST(String treeThis) {
 		parsed = treeThis.split("\\s");
@@ -139,9 +131,88 @@ public class SAnalyzer {
 		return quote.toArray();
 	}
 	
+	
 	//
 	public static void analyzeCode() {
-		
+		for(Object branch : ast) {
+			if(branch instanceof Object[]) {
+				analyzeBranch((Object[]) branch);
+			}
+		}
 	}
-
+	
+	private static void analyzeBlock(Object[] block) {
+		MainDisplay.symbolTable.add(new ArrayList<String[]>());
+		scopeHistory.add(nextScope);
+		nextScope++;
+		for(Object branch : block) {
+			if(branch instanceof Object[]) {
+				analyzeBranch((Object[]) branch);
+			}
+		}
+		scopeHistory.remove(scopeHistory.size()-1);
+	}
+	
+	private static void analyzeBranch(Object[] branch) {
+		//System.out.println(branch[0]);
+		if(branch[0].equals("DECLARE")) {
+			addToSymbolTable((String)branch[1], (String)branch[2]);
+		}
+		else if(branch[0].equals("SET")) {
+			String idType = getVarTypeOf((String)branch[1]);
+			if(idType.isEmpty()) {
+				MainDisplay.errorReport += "[Line: " + lineNumber + "] " + branch[1] + " can not be found. Please declare it first.\n";
+			}
+		}
+		else if(branch[0].equals("BLOCK")) {
+			analyzeBlock(branch);
+		}
+		else if(branch[0].equals("VARDECL")) {
+			//HERPADERP
+		}
+		else if(branch[0].equals("VARDECL")) {
+			//HERPADERP
+		}
+	}
+	
+	private static void addToSymbolTable(String type, String id) {
+		int curScope = scopeHistory.get(scopeHistory.size()-1);
+		ArrayList<String[]> scopeTable = MainDisplay.symbolTable.get(curScope);
+		for(String[] symbolInfo : scopeTable) {
+			if(symbolInfo[0].equals(id)) {
+				MainDisplay.errorReport += "[Line: " + lineNumber + "] " + id + " has already been delared in this scope.\n";
+				return;
+			}
+		}
+		String[] declareInfo = new String[4];
+		declareInfo[0] = id; //Variable Name
+		declareInfo[1] = type; //Type
+		declareInfo[2] = lineNumber; //Line of Creation
+		if(type.equals("STR"))
+			declareInfo[3] = ""; //Default String
+		else if(type.equals("INT"))
+			declareInfo[3] = "0"; //Default Integer
+		else if(type.equals("BOOL"))
+			declareInfo[3] = "FALSE"; //Default Boolean
+		else
+			declareInfo[3] = null; //Default Value
+		
+		scopeTable.add(declareInfo);
+		MainDisplay.symbolTable.set(curScope, scopeTable);
+	}
+	
+	
+	private static String getVarTypeOf(String id) {
+		ArrayList<String[]> scopeTable;
+		for(int h = scopeHistory.size(); h > 0; h--) {
+			scopeTable = MainDisplay.symbolTable.get(scopeHistory.get(h-1));
+			for(String[] idInfo : scopeTable) {
+				if(idInfo[0].equals(id)) {
+					return idInfo[1];
+				}
+			}
+		}
+		return "";
+	}
+	
 }
