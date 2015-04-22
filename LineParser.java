@@ -27,7 +27,7 @@ public class LineParser {
 		    {"SET", "E_OPEN", ""},
 		    {"SET", "TK_EXPR", ""},
 		    {"E_OPEN", "TK_EXPR", "SC_SEXP"},
-			{"E_PLUS", "TK_EXPR", "EXT_INT"},
+			{"E_PLUS", "TK_EXPR", ""},
 			{"TK_EXPR", "Q_OPEN|[a-z]|\\d|TRUE|FALSE|E_OPEN", ""},
 			//Can't seem to logic the TK_EXPOP shortcut properly...
 			//I mean, I know why, but I haven't gotten around to it yet...
@@ -38,9 +38,9 @@ public class LineParser {
 			{"Q_OPEN", ".*", "EXT_STR"},
 			{"Q_CLOSE", "E_EQTO|E_NOTEQ|E_CLOSE", ""},
 			{"Q_CLOSE", "", ""},
-			{"[a-z]", "E_EQTO|E_NOTEQ|E_CLOSE", "EXT_ID"},
+			{"[a-z]", "E_EQTO|E_NOTEQ|E_CLOSE", ""},
 			{"[a-z]", "", "EXT_ID"},
-			{"\\d", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", "EXT_INT"},
+			{"\\d", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", ""},
 			{"\\d", "", "EXT_INT"},
 			{"TRUE|FALSE", "E_EQTO|E_NOTEQ|E_CLOSE", "EXT_BOOL"},
 			{"TRUE|FALSE", "", "EXT_BOOL"},
@@ -93,8 +93,8 @@ public class LineParser {
 			MainDisplay.errorReport += "\nExpected a(n) " + startTokenErrorReference;
 		}
 		if(lookError) {
-			MainDisplay.errorReport += "\nBefore: " + token + "\n";
-			MainDisplay.errorReport += "\nFound: " + lookahead + "\n";
+			MainDisplay.errorReport += "\nBefore: " + token;
+			MainDisplay.errorReport += "\nFound: " + lookahead + "\n\n";
 		}
 		else {
 			MainDisplay.errorReport += "\nFound: " + token + "\n";
@@ -147,7 +147,8 @@ public class LineParser {
 			validType = 3;
 		}
 		else if(type.equals("DECL")) {
-			addToSymbolTable(tokens[loc-1],tokens[loc]);
+			ts++;
+			validType = 0;
 		}
 		else if(type.equals("END")) {
 			if(ts < tokens.length) {
@@ -164,16 +165,8 @@ public class LineParser {
 		//Because Mac Yosemite doesn't allow anything > 1.6 and you need 1.7 or > to switch-case Strings...
 		if(type.equals("STR")) {
 			parseQuote(loc);
-			//For Tree?
-		}
-		else if(type.equals("ID")) {
-			//For Tree?
-		}
-		else if(type.equals("INT")) {
-			//For Tree?
 		}
 		else if(type.equals("BOOL")) {
-			//For Tree?
 			if(validType == 3) {
 				validType = 2;
 			}
@@ -182,32 +175,11 @@ public class LineParser {
 	
 	private static void parseQuote(int loc) {
 		for(;loc<tokens.length; loc++) {
-			if(tokens[loc].matches("Q_CLOSE")) {
+			if(tokens[loc].equals("Q_CLOSE")) {
 				ts = loc;
 				return;
 			}
 		}
-	}
-	private static void addToSymbolTable(String type, String id) {
-		if(!id.matches("[a-z]")) {
-			MainDisplay.errorReport += "[Line: " + lineNumber + "] Expected an id after " + type + " delaration.\nFound: " + id + "\n";
-			errorFound();
-			return;
-		}
-		for(String[] symbolInfo : MainDisplay.symbolTable) {
-			if(symbolInfo[0].equals(id)) {
-				return;
-			}
-		}
-		
-		String[] declareInfo = new String[4];
-		declareInfo[0] = id; //Variable Name
-		declareInfo[1] = type; //Type
-		declareInfo[2] = "null"; //Value
-		declareInfo[3] = lineNumber; //Line of Creation
-		//declareInfo[4] = 0; //Scope (Ignored on Parse)
-		
-		MainDisplay.symbolTable.add(declareInfo);
 	}
 	
 	private static void errorFound() {
