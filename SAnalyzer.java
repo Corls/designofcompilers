@@ -174,8 +174,10 @@ public class SAnalyzer {
 		else if(branch[0].equals("BLOCK")) {
 			analyzeBlock(branch);
 		}
-		else if(branch[0].equals("VARDECL")) {
-			//HERPADERP
+		else if(branch[0].equals("BRANCH")) {
+			if(getExprTypeOf(branch[1]).equals("BOOL")) {
+				analyzeBlock((Object[]) branch[2]);
+			}
 		}
 		else if(branch[0].equals("VARDECL")) {
 			//HERPADERP
@@ -243,34 +245,37 @@ public class SAnalyzer {
 				return "STR";
 			}
 			else if(type.equals("PLUS")) {
-				if(checkMathScope(branch)) {
-					return("INT");
+				if(isTypeInt(branch)) {
+					return "INT";
 				}
 				MainDisplay.errorReport += "[Line: " + lineNumber + "] You can only add integers.";
 			}
-			else if(type.equals("PLUS")) {
-				if(checkMathScope(branch)) {
-					return("INT");
+			else if(type.matches("(EQTO)")) {
+				String checkOne = getExprTypeOf(branch[1]);
+				String checkTwo = getExprTypeOf(branch[2]);
+				System.out.println(checkOne + ", " + checkTwo);
+				if(checkOne.equals(checkTwo)) {
+					return "BOOL";
 				}
-				MainDisplay.errorReport += "[Line: " + lineNumber + "] You can only add integers.";
+				MainDisplay.errorReport += "[Line: " + lineNumber + "] You cannot compare a(n) " + checkOne + " with a(n) " + checkTwo + ".";
 			}
 		}
 		return "";
 	}
-	private static boolean checkMathScope(Object[] branch) {
+	private static boolean isTypeInt(Object[] branch) {
 		boolean goodScope = true;
 		if(branch[1] instanceof String) {
 			goodScope = goodScope && ((String) branch[1]).matches("\\d");
 		}
 		else if(branch[1] instanceof Object[]) {
-			goodScope = goodScope && checkMathScope((Object[]) branch[1]);
+			goodScope = goodScope && isTypeInt((Object[]) branch[1]);
 		}
 
 		if(branch[2] instanceof String) {
 			goodScope = goodScope && ((String) branch[2]).matches("\\d");
 		}
 		else if(branch[2] instanceof Object[]) {
-			goodScope = goodScope && checkMathScope((Object[]) branch[2]);
+			goodScope = goodScope && isTypeInt((Object[]) branch[2]);
 		}
 		return goodScope;
 	}
