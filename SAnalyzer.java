@@ -105,6 +105,12 @@ public class SAnalyzer {
 		if(parsed[ts].equals("E_CLOSE")) {
 			return branchOne;
 		}
+		else if(parsed[ts].equals("E_NOTEQ")) {
+			root = "NOTEQUAL";
+		}
+		else if(parsed[ts].equals("E_EQTO")) {
+			root = "ISEQUAL";
+		}
 		else {
 			root = parsed[ts].substring(2);
 		}
@@ -174,13 +180,13 @@ public class SAnalyzer {
 		else if(branch[0].equals("BLOCK")) {
 			analyzeBlock(branch);
 		}
-		else if(branch[0].equals("BRANCH")) {
+		else if(branch[0].equals("BRANCH") || branch[0].equals("LOOP")) {
 			if(getExprTypeOf(branch[1]).equals("BOOL")) {
 				analyzeBlock((Object[]) branch[2]);
 			}
 		}
-		else if(branch[0].equals("VARDECL")) {
-			//HERPADERP
+		else if(branch[0].equals("PRINT")) {
+			getExprTypeOf(branch[1]);
 		}
 	}
 	
@@ -250,10 +256,9 @@ public class SAnalyzer {
 				}
 				MainDisplay.errorReport += "[Line: " + lineNumber + "] You can only add integers.";
 			}
-			else if(type.matches("(EQTO)")) {
+			else if(type.endsWith("EQUAL")) {
 				String checkOne = getExprTypeOf(branch[1]);
 				String checkTwo = getExprTypeOf(branch[2]);
-				System.out.println(checkOne + ", " + checkTwo);
 				if(checkOne.equals(checkTwo)) {
 					return "BOOL";
 				}
@@ -263,21 +268,21 @@ public class SAnalyzer {
 		return "";
 	}
 	private static boolean isTypeInt(Object[] branch) {
-		boolean goodScope = true;
+		boolean goodInt = true;
 		if(branch[1] instanceof String) {
-			goodScope = goodScope && ((String) branch[1]).matches("\\d");
+			goodInt = goodInt && ((String) branch[1]).matches("\\d");
 		}
 		else if(branch[1] instanceof Object[]) {
-			goodScope = goodScope && isTypeInt((Object[]) branch[1]);
+			goodInt = goodInt && isTypeInt((Object[]) branch[1]);
 		}
 
 		if(branch[2] instanceof String) {
-			goodScope = goodScope && ((String) branch[2]).matches("\\d");
+			goodInt = goodInt && ((String) branch[2]).matches("\\d");
 		}
 		else if(branch[2] instanceof Object[]) {
-			goodScope = goodScope && isTypeInt((Object[]) branch[2]);
+			goodInt = goodInt && isTypeInt((Object[]) branch[2]);
 		}
-		return goodScope;
+		return goodInt;
 	}
 	
 }
