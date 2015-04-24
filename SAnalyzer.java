@@ -160,8 +160,15 @@ public class SAnalyzer {
 		}
 		else if(branch[0].equals("SET")) {
 			String idType = getVarTypeOf((String)branch[1]);
+			
 			if(idType.isEmpty()) {
 				MainDisplay.errorReport += "[Line: " + lineNumber + "] " + branch[1] + " can not be found. Please declare it first.\n";
+			}
+			else {
+				String exprType = getExprTypeOf(branch[2]);
+				if(!idType.equals(exprType)) {
+					MainDisplay.errorReport += "[Line: " + lineNumber + "] " + branch[1] + " (" + idType + ") can not be set to a(n) " + exprType + ".\n";
+				}
 			}
 		}
 		else if(branch[0].equals("BLOCK")) {
@@ -188,19 +195,17 @@ public class SAnalyzer {
 		declareInfo[0] = id; //Variable Name
 		declareInfo[1] = type; //Type
 		declareInfo[2] = lineNumber; //Line of Creation
+		declareInfo[3] = null; //Default Value
 		if(type.equals("STR"))
 			declareInfo[3] = ""; //Default String
 		else if(type.equals("INT"))
 			declareInfo[3] = "0"; //Default Integer
 		else if(type.equals("BOOL"))
 			declareInfo[3] = "FALSE"; //Default Boolean
-		else
-			declareInfo[3] = null; //Default Value
 		
 		scopeTable.add(declareInfo);
 		MainDisplay.symbolTable.set(curScope, scopeTable);
 	}
-	
 	
 	private static String getVarTypeOf(String id) {
 		ArrayList<String[]> scopeTable;
@@ -213,6 +218,61 @@ public class SAnalyzer {
 			}
 		}
 		return "";
+	}
+
+	private static String getExprTypeOf(Object expr) {
+		if(expr instanceof String) {
+			String type = (String) expr;
+			if(type.matches("[a-z]")) {
+				return getVarTypeOf(type);
+			}
+			else if(type.matches("\\d")) {
+				return "INT";
+			}
+			else if(type.matches("TRUE|FALSE")) {
+				return "BOOL";
+			}
+			else {
+				MainDisplay.errorReport += "[Line: " + lineNumber + "] Something went wrong. You should not see this. (" + expr + ")\n";
+			}
+		}
+		else if (expr instanceof Object[]) {
+			Object[] branch = (Object[]) expr;
+			String type = (String) branch[0];
+			if(type.equals("QUOTE")) {
+				return "STR";
+			}
+			else if(type.equals("PLUS")) {
+				if(checkMathScope(branch)) {
+					return("INT");
+				}
+				MainDisplay.errorReport += "[Line: " + lineNumber + "] You can only add integers.";
+			}
+			else if(type.equals("PLUS")) {
+				if(checkMathScope(branch)) {
+					return("INT");
+				}
+				MainDisplay.errorReport += "[Line: " + lineNumber + "] You can only add integers.";
+			}
+		}
+		return "";
+	}
+	private static boolean checkMathScope(Object[] branch) {
+		boolean goodScope = true;
+		if(branch[1] instanceof String) {
+			goodScope = goodScope && ((String) branch[1]).matches("\\d");
+		}
+		else if(branch[1] instanceof Object[]) {
+			goodScope = goodScope && checkMathScope((Object[]) branch[1]);
+		}
+
+		if(branch[2] instanceof String) {
+			goodScope = goodScope && ((String) branch[2]).matches("\\d");
+		}
+		else if(branch[2] instanceof Object[]) {
+			goodScope = goodScope && checkMathScope((Object[]) branch[2]);
+		}
+		return goodScope;
 	}
 	
 }
