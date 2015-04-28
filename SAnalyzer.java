@@ -44,6 +44,9 @@ public class SAnalyzer {
 			ts += 2;
 			branch = new Object[]{"SET", token, branchEXPR()};
 		}
+		else if(token.startsWith("LN_")) {
+			branch = new Object[]{"LINE", token.substring(3)};
+		}
 		else {
 			MainDisplay.errorReport = "[Line: " + lineNumber + "] This message should never appear. (" + token + ")\n";
 		}
@@ -52,7 +55,6 @@ public class SAnalyzer {
 	private static boolean isIgnored(String token) {
 		if(token.matches("LN_\\d+")) {
 			lineNumber = token.substring(3);
-			return true;
 		}
 		else if(token.equals("EOF")) {
 			ts = parsed.length;
@@ -134,6 +136,7 @@ public class SAnalyzer {
 	
 	//
 	public static void analyzeCode() {
+		lineNumber = "0";
 		for(Object branch : ast) {
 			if(branch instanceof Object[]) {
 				analyzeBranch((Object[]) branch);
@@ -178,6 +181,9 @@ public class SAnalyzer {
 		}
 		else if(branch[0].equals("PRINT")) {
 			getExprTypeOf(branch[1]);
+		}
+		else if(branch[0].equals("LINE")) {
+			lineNumber = (String) branch[1];
 		}
 	}
 	
