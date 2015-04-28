@@ -105,12 +105,6 @@ public class SAnalyzer {
 		if(parsed[ts].equals("E_CLOSE")) {
 			return branchOne;
 		}
-		else if(parsed[ts].equals("E_NOTEQ")) {
-			root = "NOTEQUAL";
-		}
-		else if(parsed[ts].equals("E_EQTO")) {
-			root = "ISEQUAL";
-		}
 		else {
 			root = parsed[ts].substring(2);
 		}
@@ -167,10 +161,7 @@ public class SAnalyzer {
 		else if(branch[0].equals("SET")) {
 			String idType = getVarTypeOf((String)branch[1]);
 			
-			if(idType.isEmpty()) {
-				MainDisplay.errorReport += "[Line: " + lineNumber + "] " + branch[1] + " can not be found. Please declare it first.\n";
-			}
-			else {
+			if(!idType.isEmpty()) {
 				String exprType = getExprTypeOf(branch[2]);
 				if(!idType.equals(exprType)) {
 					MainDisplay.errorReport += "[Line: " + lineNumber + "] " + branch[1] + " (" + idType + ") can not be set to a(n) " + exprType + ".\n";
@@ -180,7 +171,7 @@ public class SAnalyzer {
 		else if(branch[0].equals("BLOCK")) {
 			analyzeBlock(branch);
 		}
-		else if(branch[0].equals("BRANCH") || branch[0].equals("LOOP")) {
+		else if(branch[0].equals("BRANCH")) {
 			if(getExprTypeOf(branch[1]).equals("BOOL")) {
 				analyzeBlock((Object[]) branch[2]);
 			}
@@ -225,6 +216,7 @@ public class SAnalyzer {
 				}
 			}
 		}
+		MainDisplay.errorReport += "[Line: " + lineNumber + "] " + id + " can not be found. Please declare it first.\n";
 		return "";
 	}
 
@@ -256,7 +248,7 @@ public class SAnalyzer {
 				}
 				MainDisplay.errorReport += "[Line: " + lineNumber + "] You can only add integers.";
 			}
-			else if(type.endsWith("EQUAL")) {
+			else if(type.matches("(EQTO)")) {
 				String checkOne = getExprTypeOf(branch[1]);
 				String checkTwo = getExprTypeOf(branch[2]);
 				if(checkOne.equals(checkTwo)) {
@@ -268,21 +260,21 @@ public class SAnalyzer {
 		return "";
 	}
 	private static boolean isTypeInt(Object[] branch) {
-		boolean goodInt = true;
+		boolean goodScope = true;
 		if(branch[1] instanceof String) {
-			goodInt = goodInt && ((String) branch[1]).matches("\\d");
+			goodScope = goodScope && ((String) branch[1]).matches("\\d");
 		}
 		else if(branch[1] instanceof Object[]) {
-			goodInt = goodInt && isTypeInt((Object[]) branch[1]);
+			goodScope = goodScope && isTypeInt((Object[]) branch[1]);
 		}
 
 		if(branch[2] instanceof String) {
-			goodInt = goodInt && ((String) branch[2]).matches("\\d");
+			goodScope = goodScope && ((String) branch[2]).matches("\\d");
 		}
 		else if(branch[2] instanceof Object[]) {
-			goodInt = goodInt && isTypeInt((Object[]) branch[2]);
+			goodScope = goodScope && isTypeInt((Object[]) branch[2]);
 		}
-		return goodInt;
+		return goodScope;
 	}
 	
 }
