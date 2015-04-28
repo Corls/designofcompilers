@@ -10,41 +10,40 @@ public class LineParser {
 	private static int ts = 0;
 	private static final String[][] startTokens =
 		{
-		  //{"Start Token", "Following Token", "Function"},
-			{"LN_\\d+", "", "SC_LINE"},
-			{"B_OPEN", "", "SC_SBLOCK"},
-			{"B_CLOSE", "", "SC_EBLOCK"},
-			{"C_[A-Z]+", "E_OPEN", "SC_COND"},
-			{"D_[A-Z]+", "[a-z]", "SC_DECL"},
-			{"PRINT", "E_OPEN", ""},
-			{"[a-z]", "SET", ""},
-			{"EOF", "", "SC_END"}
+		  //{"Start Token", "Following Token", "Function", "Found", "Expected"},
+			{"LN_\\d+", "", "SC_LINE", "New Line", "Not That"},
+			{"B_OPEN", "", "SC_SBLOCK", "{", "Not That"},
+			{"B_CLOSE", "", "SC_EBLOCK", "}", "Not That"},
+			{"C_[A-Z]+", "E_OPEN", "SC_COND", "if/while", "("},
+			{"D_[A-Z]+", "[a-z]", "SC_DECL", "int/string/boolean", "id"},
+			{"PRINT", "E_OPEN", "", "print", "("},
+			{"[a-z]", "SET", "", "id", "="},
+			{"EOF", "", "SC_END", "$", "Not That"}
 		};
-	private static final String startTokenErrorReference = "{, if, while, string, int, boolean, print, id, or }";
 	private static final String[][] tokenTree =
 		{
-		  //{"Start Token", "Following Token", "Function"},
-		    {"SET", "E_OPEN", ""},
-		    {"SET", "TK_EXPR", ""},
-		    {"E_OPEN", "TK_EXPR", "SC_SEXP"},
-			{"E_PLUS", "TK_EXPR", ""},
-			{"TK_EXPR", "Q_OPEN|[a-z]|\\d|TRUE|FALSE|E_OPEN", ""},
+		  //{"Start Token", "Following Token", "Function", "Found", "Expected"},
+		    {"SET", "E_OPEN", "", "=", "Expression"},
+		    {"SET", "TK_EXPR", "", "=", "Expression"},
+		    {"E_OPEN", "TK_EXPR", "SC_SEXP", "(", "Expression"},
+			{"E_PLUS", "TK_EXPR", "", "+", "id/number"},
+			{"TK_EXPR", "Q_OPEN|[a-z]|\\d|TRUE|FALSE|E_OPEN", "", "Expression", "Not That"},
 			//Can't seem to logic the TK_EXPOP shortcut properly...
 			//I mean, I know why, but I haven't gotten around to it yet...
 			//{"TK_EXPOP", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", ""},
-			{"E_CLOSE", "E_EQTO|E_NOTEQ|E_CLOSE", "SC_DEXP"},
-			{"E_CLOSE", ".*", "SC_DEXP"},
+			{"E_CLOSE", "E_EQTO|E_NOTEQ|E_CLOSE", "SC_DEXP", ")", "Comparison/New Statement"},
+			{"E_CLOSE", ".*", "SC_DEXP", ")", "Comparison/New Statement"},
 		    
-			{"Q_OPEN", ".*", "EXT_STR"},
-			{"Q_CLOSE", "E_EQTO|E_NOTEQ|E_CLOSE", ""},
-			{"Q_CLOSE", "", ""},
-			{"[a-z]", "E_EQTO|E_NOTEQ|E_CLOSE", ""},
-			{"[a-z]", "", "EXT_ID"},
-			{"\\d", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", ""},
-			{"\\d", "", "EXT_INT"},
-			{"TRUE|FALSE", "E_EQTO|E_NOTEQ|E_CLOSE", "EXT_BOOL"},
-			{"TRUE|FALSE", "", "EXT_BOOL"},
-			{"E_EQTO|E_NOTEQ", "TK_EXPR", "EXT_BOOL"}
+			{"Q_OPEN", ".*", "EXT_STR", "\"", "Comparison/New Statement"},
+			{"Q_CLOSE", "E_EQTO|E_NOTEQ|E_CLOSE", "", "\"", "Not That"},
+			{"Q_CLOSE", "", "", "\"", "Not That"},
+			{"[a-z]", "E_EQTO|E_NOTEQ|E_CLOSE", "", "id", "Comparison/New Statement"},
+			{"[a-z]", "", "", "id", "Comparison/New Statement"},
+			{"\\d", "E_EQTO|E_NOTEQ|E_PLUS|E_CLOSE", "", "number", "+/Comparison/New Statement"},
+			{"\\d", "", "", "number", "+/Comparison/New Statement"},
+			{"TRUE|FALSE", "E_EQTO|E_NOTEQ|E_CLOSE", "EXT_BOOL", "true/false", "+/Comparison/New Statement"},
+			{"TRUE|FALSE", "", "EXT_BOOL", "true/false", "+/Comparison/New Statement"},
+			{"E_EQTO|E_NOTEQ", "TK_EXPR", "EXT_BOOL", "==/!==", "Expression"}
 		};
 	
 	public static void parseCode(String parseThis) {
@@ -62,6 +61,7 @@ public class LineParser {
 	
 	public static void tokenMatch(String token, String lookahead) {
 		String[][] validTokens = tokenTree;
+		String expected = "";
 		boolean lookError = false;
 		if(validType == 0) {
 			validTokens = startTokens;
@@ -86,18 +86,17 @@ public class LineParser {
 					}
 					return;
 				}
+				else {
+					expected = "Expected: \"" + valToken[4] + "\" after \"" + valToken[3] + "\"";
+				}
 			}
 		}
-		MainDisplay.errorReport += "[Line: " + lineNumber + "] Invalid token found. ";
-		if(validType == 0) {
-			MainDisplay.errorReport += "\nExpected a(n) " + startTokenErrorReference;
-		}
+		MainDisplay.errorReport += "[Line: " + lineNumber + "] Invalid token found.";
 		if(lookError) {
-			MainDisplay.errorReport += "\nBefore: " + token;
-			MainDisplay.errorReport += "\nFound: " + lookahead + "\n\n";
+			MainDisplay.errorReport += " " + expected + ". Found: \"" + lookahead + "\"\n";
 		}
 		else {
-			MainDisplay.errorReport += "\nFound: " + token + "\n";
+			MainDisplay.errorReport += "\n";
 		}
 		errorFound();
 	}
@@ -154,7 +153,7 @@ public class LineParser {
 			if(ts < tokens.length) {
 				MainDisplay.warningReport += "[Line: " + lineNumber + "] Extra code found after end of file ($).\n";
 			}
-			if(bracketsIn > 0) {
+			if(bracketsIn > 0 && MainDisplay.errorReport.isEmpty()) {
 				MainDisplay.errorReport += "[End of File] You are missing " + bracketsIn + " }.\n";
 			}
 			ts = tokens.length;
