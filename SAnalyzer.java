@@ -135,13 +135,18 @@ public class SAnalyzer {
 	
 	
 	//
-	public static void analyzeCode() {
+	public static ArrayList<Object> analyzeCode() {
 		lineNumber = "0";
 		for(Object branch : ast) {
 			if(branch instanceof Object[]) {
 				analyzeBranch((Object[]) branch);
 			}
 		}
+		System.out.println("\n" + Arrays.deepToString(ast.toArray()) + "\n");
+		for(ArrayList<String[]> scopeTable : MainDisplay.symbolTable) {
+			System.out.println(Arrays.deepToString(scopeTable.toArray()));
+		}
+		return ast;
 	}
 	
 	private static void analyzeBlock(Object[] block) {
@@ -196,17 +201,10 @@ public class SAnalyzer {
 				return;
 			}
 		}
-		String[] declareInfo = new String[4];
+		String[] declareInfo = new String[3];
 		declareInfo[0] = id; //Variable Name
 		declareInfo[1] = type; //Type
 		declareInfo[2] = lineNumber; //Line of Creation
-		declareInfo[3] = null; //Default Value
-		if(type.equals("STR"))
-			declareInfo[3] = ""; //Default String
-		else if(type.equals("INT"))
-			declareInfo[3] = "0"; //Default Integer
-		else if(type.equals("BOOL"))
-			declareInfo[3] = "FALSE"; //Default Boolean
 		
 		scopeTable.add(declareInfo);
 		MainDisplay.symbolTable.set(curScope, scopeTable);
@@ -254,13 +252,16 @@ public class SAnalyzer {
 				}
 				MainDisplay.errorReport += "[Line: " + lineNumber + "] You can only add integers.";
 			}
-			else if(type.matches("(EQTO)")) {
+			else if(type.matches("EQTO|NOTEQ")) {
 				String checkOne = getExprTypeOf(branch[1]);
 				String checkTwo = getExprTypeOf(branch[2]);
 				if(checkOne.equals(checkTwo)) {
 					return "BOOL";
 				}
-				MainDisplay.errorReport += "[Line: " + lineNumber + "] You cannot compare a(n) " + checkOne + " with a(n) " + checkTwo + ".";
+				MainDisplay.errorReport += "[Line: " + lineNumber + "] You cannot compare a(n) " + checkOne + " with a(n) " + checkTwo + ".\n";
+			}
+			else {
+				MainDisplay.errorReport += "[Line: " + lineNumber + "] Something went wrong. You should not see this. " + Arrays.deepToString(branch) + "\n";
 			}
 		}
 		return "";
