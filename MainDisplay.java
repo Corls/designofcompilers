@@ -35,7 +35,7 @@ public class MainDisplay {
 	
 	public static void main(String[] args) {
 		//Get Input
-		String practiceStatement = "{string x = \"hello there\"\nif(potato != \"\")\n\tx= \"hello failed\"\nn string 9xderp =-089 string b = \"b\"}$";
+		String practiceStatement = "{intxx = 2 + 3 if(x != 4){\nprint(x)print(2)\nprint(\"all printed\")\n}}$";
 		System.out.println("Sample:\n" + practiceStatement + "\n\nPlease Enter Code Below:");
 		String scanTest = scan.nextLine();
 		while(!scanTest.endsWith("$"))
@@ -57,11 +57,11 @@ public class MainDisplay {
 			System.out.println(practiceArray[i]);
 		}
 		if(!warningReport.isEmpty()) {
-			System.out.println("Lexer Warning Report:\n" + warningReport);
+			System.out.println("Lex Warnings:\n" + warningReport);
 			warningReport = "";
 		}
 		if(!errorReport.isEmpty()) {
-			System.out.println("Error Report:\n" + errorReport);
+			System.out.println("Lex Errors:\n" + errorReport);
 			return;
 		}
 		
@@ -69,11 +69,11 @@ public class MainDisplay {
 		System.out.println("\n");
 		LineParser.parseCode(lexedCode);
 		if(!warningReport.isEmpty()) {
-			System.out.println("Parser Warning Report:\n" + warningReport);
+			System.out.println("Parse Warnings:\n" + warningReport);
 			warningReport = "";
 		}
 		if(!errorReport.isEmpty()) {
-			System.out.println("Error Report:\n" + errorReport);
+			System.out.println("Parse Errors:\n" + errorReport);
 			return;
 		}
 		
@@ -81,22 +81,33 @@ public class MainDisplay {
 		System.out.println("\n");
 		SAnalyzer.createAST(lexedCode);
 		if(!warningReport.isEmpty()) {
-			System.out.println("AST Warning Report:\n" + warningReport);
+			System.out.println("AST Warnings:\n" + warningReport);
 			warningReport = "";
 		}
 		if(!errorReport.isEmpty()) {
-			System.out.println("Error Report:\n" + errorReport);
+			System.out.println("AST Errors:\n" + errorReport);
 			return;
 		}
 		
 		System.out.println("\n");
-		SAnalyzer.analyzeCode();
+		ArrayList<Object> ast = SAnalyzer.analyzeCode();
 		if(!warningReport.isEmpty()) {
-			System.out.println("AST Warning Report:\n" + warningReport);
+			System.out.println("Semantic Warnings:\n" + warningReport);
 			warningReport = "";
 		}
 		if(!errorReport.isEmpty()) {
-			System.out.println("Error Report:\n" + errorReport);
+			System.out.println("Semantic Errors:\n" + errorReport);
+			return;
+		}
+		
+		System.out.println("\n");
+		CodeGenerator.generateCode(ast);
+		if(!warningReport.isEmpty()) {
+			System.out.println("Generation Warnings:\n" + warningReport);
+			warningReport = "";
+		}
+		if(!errorReport.isEmpty()) {
+			System.out.println("Generation Errors:\n" + errorReport);
 			return;
 		}
 		
