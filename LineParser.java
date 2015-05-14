@@ -91,7 +91,7 @@ public class LineParser {
 				}
 			}
 		}
-		MainDisplay.errorReport += "[Line: " + lineNumber + "] Invalid token found.";
+		MainDisplay.errorReport += "[Line: " + lineNumber + "] Invalid token found (" + token + ")";
 		if(lookError) {
 			MainDisplay.errorReport += " " + expected + ". Found: \"" + lookahead + "\"\n";
 		}
