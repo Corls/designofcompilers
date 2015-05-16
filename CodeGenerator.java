@@ -7,11 +7,10 @@ public class CodeGenerator {
 	private static String mechCode = "";
 	private static String staticCode = "00 ";
 	private static String heapCode = "";
-	private static int jumpTemp = 1;
 	
 	private static ArrayList<String> varTable = new ArrayList<String>();
 	//private static ArrayList<String[]> strTable = new ArrayList<String[]>();
-	private static ArrayList<Object[]> jumpTable = new ArrayList<Object[]>();
+	private static ArrayList<String> jumpTable = new ArrayList<String>();
 	
 	public static void generateCode(ArrayList<Object> ast) {
 		varTable.add("T0");
@@ -20,7 +19,12 @@ public class CodeGenerator {
 				generateBranch((Object[])branch);
 			}
 		}
-		System.out.println(mechCode);
+		mechCode += "00 ";
+		replaceTemps();
+		replaceJumps();
+		System.out.println(mechCode.toUpperCase());
+		System.out.println(staticCode);
+		System.out.println(heapCode);
 	}
 	
 	private static void generateBranch(Object[] branch) {
@@ -60,8 +64,8 @@ public class CodeGenerator {
 			if(branch[1] instanceof Object[]) {
 				temp = generateExpr((Object[])branch[1], "0");
 			}
-			else if(branch[2] instanceof String) {
-				temp = generateExpr((String)branch[2]);
+			else if(branch[1] instanceof String) {
+				temp = generateExpr((String)branch[1]);
 			}
 			else {
 				MainDisplay.errorReport = "[Line: " + lineNumber + "]You should never get this message.\n";
@@ -69,7 +73,36 @@ public class CodeGenerator {
 			mechCode += temp + " 8D T0 00 AC T0 00 A2 01 FF ";
 		}
 		else if(branch[0].equals("BRANCH") || branch[0].equals("LOOP")) {
+			boolean isLoop = branch[0].equals("LOOP");
+			int jStart, jEnd, jPos;
+			String jump = "00";
+			jPos = jumpTable.size();
+			jumpTable.add(jump);
+			temp = generateExpr((Object[])branch[1], "0");
+			mechCode += temp + " 8D T0 00 A2 00 EC T0 00 D0 J" + jPos + " ";
+			jStart = mechCode.replaceAll("J\\d+", "J0").length()/3;
+			generateBranch((Object[])branch[2]);
+			jEnd = mechCode.replaceAll("J\\d+", "J0").length()/3;
+			if(isLoop) {
+				jEnd += 7;
+			}
+			jump = Integer.toHexString(jEnd - jStart);
+			if(jump.length() == 1)
+				jump = "0" + jump;
+			jumpTable.set(jPos, jump);
 			
+			if(isLoop) {
+				jump = Integer.toHexString(jEnd - jStart);
+				if(jump.length() == 1)
+					jump = "0" + jump;
+				jumpTable.set(jPos, jump);
+				
+				jPos = temp.replaceAll("J\\d+", "J0").length()/3 + 17;
+				jump = Integer.toHexString(256 - jPos);
+				if(jump.length() == 1)
+					jump = "0" + jump;
+				mechCode += "A9 00 EC FF 00 D0 " + jump + " ";
+			}
 		}
 		else if(branch[0].equals("")) {
 			
@@ -111,7 +144,7 @@ public class CodeGenerator {
 			else {
 				MainDisplay.errorReport = "[Line: " + lineNumber + "] You should never get this message.\n";
 			}
-			temp += " 8D T" + id + " 00 AE T" + id + " 00";
+			temp += " 8D T" + id + " 00 AE T" + id + " 00 ";
 			
 			if(expr[2] instanceof Object[]) {
 				temp += generateExpr((Object[])expr[2], id);
@@ -125,10 +158,10 @@ public class CodeGenerator {
 			temp += " 8D T" + id + " 00 EC T" + id + " 00";
 			
 			if(expr[0].equals("EQTO")) {
-				temp += " A9 01 D0 08 A9 00";
+				temp += " A9 01 D0 02 A9 00";
 			}
 			else {
-				temp += " A9 00 D0 08 A9 01";
+				temp += " A9 00 D0 02 A9 01";
 			}
 		}
 		else if(expr[0].equals("QUOTE")) {
@@ -136,17 +169,19 @@ public class CodeGenerator {
 			for(int i = 1; i < expr.length; i++) {
 				temp = (String) expr[i];
 				if(temp.equals("SPACE")) {
-					quote += "20 ";
+					quote += "20";
 				}
-				else {
+				else if (!temp.equals("EMPTY")){
 					char[] test = temp.toCharArray();
 					for(char tst : test) {
 						quote += Integer.toHexString(tst);
 					}
 				}
 			}
-			quote += " 00";
-			return "Q_" + quote;
+			quote += "00";
+			System.out.println(quote);
+			heapCode = quote + heapCode;
+			return "A9 " + Integer.toHexString(255 - heapCode.length());
 		}
 		else {
 			MainDisplay.errorReport = "[Line: " + lineNumber + "] You should never get this message.\n";
@@ -176,22 +211,28 @@ public class CodeGenerator {
 		return "A9 " + expr;
 	}
 	
-	private static String generateCondition(Object something) {
-		String temp = "";
-		
-		return temp;
+	private static void replaceTemps() {
+		String temp = "T0",
+			   sPos = "00";
+		int sStart = mechCode.replaceAll("J\\d+", "J0").length()/3;
+		System.out.println("Start Static at " + sStart);
+		for(int i = 0; i < varTable.size(); i++) {
+			temp = varTable.get(i);
+			sPos = Integer.toHexString(sStart + i);
+			System.out.println("Next Static at " + sPos);
+			mechCode = mechCode.replaceAll(temp, sPos);
+		}
 	}
 	
-	private static String generatePrint(Object[] expr) {
-		String temp = "";
-		
-		return temp;
-	}
-	
-	private static String generateX(Object something) {
-		String temp = "";
-		
-		return temp;
+	private static void replaceJumps() {
+		String temp = "J0";
+		for(int i = 0; i < jumpTable.size(); i++) {
+			temp = "J" + i;
+			mechCode = mechCode.replaceAll(temp, jumpTable.get(i));
+		}
 	}
 
 }
+/*{intxintyintzbooleanabooleanbbooleanc
+if((x==y)==((z != 3 + 4)==(a == (b != (c == true))))) {
+print(2)}}$*/
