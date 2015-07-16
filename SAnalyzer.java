@@ -250,7 +250,7 @@ public class SAnalyzer {
 				if(isTypeInt(branch)) {
 					return "INT";
 				}
-				MainDisplay.errorReport += "[Line: " + lineNumber + "] You can only add integers.";
+				MainDisplay.errorReport += "[Line: " + lineNumber + "] You can only add integers.\n";
 			}
 			else if(type.matches("EQTO|NOTEQ")) {
 				String checkOne = getExprTypeOf(branch[1]);
@@ -264,24 +264,10 @@ public class SAnalyzer {
 				MainDisplay.errorReport += "[Line: " + lineNumber + "] Something went wrong. You should not see this. " + Arrays.deepToString(branch) + "\n";
 			}
 		}
-		return "";
+		return "INVALID";
 	}
 	private static boolean isTypeInt(Object[] branch) {
-		boolean goodScope = true;
-		if(branch[1] instanceof String) {
-			goodScope = goodScope && ((String) branch[1]).matches("\\d");
-		}
-		else if(branch[1] instanceof Object[]) {
-			goodScope = goodScope && isTypeInt((Object[]) branch[1]);
-		}
-
-		if(branch[2] instanceof String) {
-			goodScope = goodScope && ((String) branch[2]).matches("\\d");
-		}
-		else if(branch[2] instanceof Object[]) {
-			goodScope = goodScope && isTypeInt((Object[]) branch[2]);
-		}
-		return goodScope;
+		return getExprTypeOf(branch[1]).equals("INT") && getExprTypeOf(branch[2]).equals("INT");
 	}
 	
 }
