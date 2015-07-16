@@ -13,6 +13,7 @@ public class CodeGenerator {
 	private static ArrayList<String> jumpTable = new ArrayList<String>();
 	
 	public static void generateCode(ArrayList<Object> ast) {
+		//need more than just a "T0"...
 		varTable.add("T0");
 		for(Object branch : ast) {
 			if(branch instanceof Object[]) {
@@ -22,9 +23,12 @@ public class CodeGenerator {
 		mechCode += "00 ";
 		replaceTemps();
 		replaceJumps();
-		System.out.println(mechCode.toUpperCase());
-		System.out.println(staticCode);
-		System.out.println(heapCode);
+		String result = mechCode.toUpperCase() + staticCode;
+		int filler = 255 - (result.length() + heapCode.length()) / 3;
+		for(int i = 0; i < filler; i++) {
+			result += "00 ";
+		}
+		System.out.println(result + " " + heapCode);
 	}
 	
 	private static void generateBranch(Object[] branch) {
@@ -63,6 +67,10 @@ public class CodeGenerator {
 		else if(branch[0].equals("PRINT")) {
 			if(branch[1] instanceof Object[]) {
 				temp = generateExpr((Object[])branch[1], "0");
+				if(((Object[])branch[1])[0].equals("QUOTE")) {
+					mechCode += temp + " 8D T0 00 AC T0 00 A2 02 FF ";
+					return;
+				}
 			}
 			else if(branch[1] instanceof String) {
 				temp = generateExpr((String)branch[1]);
@@ -169,19 +177,18 @@ public class CodeGenerator {
 			for(int i = 1; i < expr.length; i++) {
 				temp = (String) expr[i];
 				if(temp.equals("SPACE")) {
-					quote += "20";
+					quote += "20 ";
 				}
 				else if (!temp.equals("EMPTY")){
 					char[] test = temp.toCharArray();
 					for(char tst : test) {
-						quote += Integer.toHexString(tst);
+						quote += Integer.toHexString(tst) + " ";
 					}
 				}
 			}
-			quote += "00";
-			System.out.println(quote);
+			quote += "00 ";
 			heapCode = quote + heapCode;
-			return "A9 " + Integer.toHexString(255 - heapCode.length());
+			return "A9 " + Integer.toHexString(255 - (heapCode.length()/3));
 		}
 		else {
 			MainDisplay.errorReport = "[Line: " + lineNumber + "] You should never get this message.\n";
@@ -219,6 +226,9 @@ public class CodeGenerator {
 		for(int i = 0; i < varTable.size(); i++) {
 			temp = varTable.get(i);
 			sPos = Integer.toHexString(sStart + i);
+			if(sPos.length() < 2) {
+				sPos = "0" + sPos;
+			}
 			System.out.println("Next Static at " + sPos);
 			mechCode = mechCode.replaceAll(temp, sPos);
 		}
